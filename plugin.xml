@@ -2,7 +2,7 @@
 
 <plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
            id="org.systronik.tcpserver"
-      version="0.0.1">
+      version="0.0.2">
     <name>TCPServer</name>
     <description>PhoneGap TCP Server plugin</description>
     <license>MIT</license>
