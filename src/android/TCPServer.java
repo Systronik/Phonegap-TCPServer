@@ -1,56 +1,52 @@
 package org.systronik.tcpserver;
 
-import android.view.WindowManager;
 import org.apache.cordova.CallbackContext;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-
 // Cordova
 import org.apache.cordova.CordovaPlugin;
-import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.util.Log;
 
 public class TCPServer extends CordovaPlugin {
 
-	private static final String TAG = "TCPServer";
-  
-  private static final String ACTION_KEEP_AWAKE = "keepAwake";
-  private static final String ACTION_ALLOW_SLEEP_AGAIN = "allowSleepAgain";
+  private static final String TAG = "TCPServer";
   private static final String ACTION_START_SERVER = "startServer";
-  private ServerSocket server;
-  private String ReceivedString;
-  private String getExample = "HTTP/1.1 200 OK\r\nDate: Mon, 23 May 2005 22:38:34 GMT\r\nServer: Apache/1.3.3.7 (Unix) (Red-Hat/Linux)\r\nLast-Modified: Wed, 08 Jan 2003 23:11:55 GMT\r\nETag: \"3f80f-1b6-3e1cb03b\"\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 124\r\nAccept-Ranges: bytes\r\nConnection: close\r\n\r\n<html>\r\n<head>\r\n<title>An Example Page</title>\r\n</head>\n<body>\r\nHello World, this is a very simple 1234 document.\r\n</body>\r\n</html>\r\n";
-  private String OutString = "HTTP/1.1 200 OK\r\nServer: Apache/1.3.29 (Unix) PHP/4.3.4\r\nContent-Length: 209\r\nContent-Language: de\r\nConnection: close\r\nContent-Type: text/html\r\n\r\n<!DOCTYPE html><html><head><title>TODO supply a title</title><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head><body><div>Hello World</div></body>/html>\r\n";
+  //private String getExample = "HTTP/1.1 200 OK\r\nDate: Mon, 23 May 2005 22:38:34 GMT\r\nServer: Apache/1.3.3.7 (Unix) (Red-Hat/Linux)\r\nLast-Modified: Wed, 08 Jan 2003 23:11:55 GMT\r\nETag: \"3f80f-1b6-3e1cb03b\"\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 124\r\nAccept-Ranges: bytes\r\nConnection: close\r\n\r\n<html>\r\n<head>\r\n<title>An Example Page</title>\r\n</head>\n<body>\r\nHello World, this is a very simple 1234 document.\r\n</body>\r\n</html>\r\n";
+  private String OutString;
 
   ServerSocket myServerSocket;
   boolean ServerOn = true;
+  boolean ServerActivated = false;
   
   @Override
   public boolean execute(String action, JSONArray args, final CallbackContext callbackContext) throws JSONException {
     try {
       if (ACTION_START_SERVER.equals(action)) {
-    	  cordova.getThreadPool().execute(new Runnable() {
+    	  JSONObject arg_object = args.getJSONObject(0);
+    	  OutString = arg_object.getString("dataToSend");
+    	  if (!(OutString.contains("HTTP/1.1"))){
+    		  //OutString = getExample;
+    	  }
+    	  Log.d(TAG, "Data to send: " + OutString);
+    	  if (!ServerActivated){
+    		  cordova.getThreadPool().execute(new Runnable() {
     		    public void run() {
     		    	Log.d(TAG, "Server is starting...");    	  
     				  try
     			        { 
     			            myServerSocket = new ServerSocket(53000); 
-    			            Log.d(TAG, "server started"); 
+    			            Log.d(TAG, "server started");
+    			            ServerActivated = true;
+    			            
     			        } 
     			        catch(IOException ioe) 
     			        { 
@@ -98,7 +94,8 @@ public class TCPServer extends CordovaPlugin {
     			        } 
     			        callbackContext.success();  
     		    }
-    	  });
+    		  });
+    	  }
     	  return true;
       
       } else {
@@ -179,7 +176,7 @@ public class TCPServer extends CordovaPlugin {
                       ServerOn = false;
                   } else if(clientCommand.contains("GET")) { 
                       // Get Command
-                	  output.write(getExample.getBytes());
+                	  output.write(OutString.getBytes());
                 	  output.flush();
                   } else {
                           // Process it
