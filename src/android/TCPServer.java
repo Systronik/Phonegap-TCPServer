@@ -183,7 +183,7 @@ public class TCPServer extends CordovaPlugin {
                 			  sendString = sendString.replace("TransmissionId=\"0\"", "TransmisionId=\"" + idString + "\"");
                 			  i = sendString.indexOf("Content-Length");
                 			  String lengthString = sendString.substring(i);
-                			  lengthString = lengthString.substring(0, lengthString.indexOf("Accept-Ranges"));
+                			  lengthString = lengthString.substring(0, lengthString.indexOf("Content-Language"));
                 			  idString = sendString.substring(sendString.indexOf("\r\n\r\n") + 2);        
                 			  
                 			  sendString = sendString.replace(lengthString, "Content-Length:" + idString.length() + "\r\n");
