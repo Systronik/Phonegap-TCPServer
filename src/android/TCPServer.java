@@ -181,6 +181,10 @@ public class TCPServer extends CordovaPlugin {
                 			  idString = idString.trim();
                 			  Log.d(TAG, "ID found: " + idString);
                 			  sendString = sendString.replace("TransmissionId=\"0\"", "TransmisionId=\"" + idString + "\"");
+                			  i = sendString.indexOf("Content-Type:");
+                			  String contentString = sendString.substring(i);
+                			  contentString = contentString.substring(0, contentString.indexOf("Content-Length"));
+                			  
                 			  idString = sendString.substring(sendString.indexOf("\r\n\r\n") + 2);               			  
                 			  String str = "HTTP/1.1 200 OK\r\n" +
                 						"Server: Apache/1.3.29 (Unix) PHP/4.3.4\r\n" +
@@ -188,7 +192,8 @@ public class TCPServer extends CordovaPlugin {
                 						"Content-Language: de\r\n" +
                 						"Connection: close\r\n" +
                 						"Access-Control-Allow-Origin: *\r\n" +
-                						"Content-Type: text/html\r\n\r\n" + 
+                						contentString +
+                						"\r\n\r\n" + 
                 						idString;
                 			  sendString = str;
                 		  }
