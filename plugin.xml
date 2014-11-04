@@ -22,6 +22,15 @@
         </config-file>
 
         <source-file src="src/android/TCPServer.java" target-dir="src/org/systronik/tcpserver" />      
-     </platform>          
+     </platform> 
+	<platform name="ios">
+        <config-file target="config.xml" parent="/widget">
+            <feature name=“TCPServer”>
+                <param name="ios-package" value=“TCPServer” onload="true"/>
+            </feature>
+        </config-file>
+        <header-file src="src/ios/TCPServer.h” target-dir=“TCPServer” />
+        <source-file src="src/ios/TCPServer.m” target-dir=“TCPServer” />
+    </platform>         
 </plugin>
 
