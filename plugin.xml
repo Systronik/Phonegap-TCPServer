@@ -29,8 +29,8 @@
                 <param name="ios-package" value="TCPServer" onload="true"/>
             </feature>
         </config-file>
-        <header-file src="src/ios/TCPServer.h” target-dir=“TCPServer” />
-        <source-file src="src/ios/TCPServer.m” target-dir=“TCPServer” />
+        <header-file src="src/ios/TCPServer.h" target-dir="TCPServer" />
+        <source-file src="src/ios/TCPServer.m" target-dir="TCPServer" />
     </platform>         
 </plugin>
 
