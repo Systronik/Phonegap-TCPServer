@@ -6,25 +6,16 @@
 //
 //
 
-#ifndef BLECommunication_BlueRadio_h
-#define BLECommunication_BlueRadio_h
+#ifndef TCPServer_h
+#define TCPServer_h
 
 #import <Cordova/CDV.h>
-#import "Brsp.h"
 #import "AppDelegate.h"
 
 
-@interface BLECommunication : CDVPlugin <BrspDelegate, CBCentralManagerDelegate> {
-    NSString* scanCallback;
-    NSString* connectionCallback;
-    NSString* dataCallback;
+@interface TCPServer : CDVPlugin {
+    NSString* serverCallback;
 }
-
-@property (nonatomic, strong)CBCentralManager *cBCM;
-
-- (NSString*)hexString:(NSData*)inData;
-- (void)checkAvailability:(CDVInvokedUrlCommand *)command;
-- (void)scanDevices:(CDVInvokedUrlCommand *)command;
 
 @end
 
