@@ -20,15 +20,17 @@
                 <param name="android-package" value="org.systronik.tcpserver.TCPServer"/>
             </feature>
         </config-file>
-
-        <source-file src="src/android/TCPServer.java" target-dir="src/org/systronik/tcpserver" />      
-     </platform> 
+        <source-file src="src/android/TCPServer.java" target-dir="src/org/systronik/tcpserver" />
+    </platform>
+    <!-- ios -->
 	<platform name="ios">
         <config-file target="config.xml" parent="/widget">
             <feature name="TCPServer">
                 <param name="ios-package" value="TCPServer" onload="true"/>
             </feature>
         </config-file>
+        <header-file src="src/ios/GCDAsyncSocket.h" target-dir="TCPServer" />
+        <source-file src="src/ios/GCDAsyncSocket.m" target-dir="TCPServer" />
         <header-file src="src/ios/TCPServer.h" target-dir="TCPServer" />
         <source-file src="src/ios/TCPServer.m" target-dir="TCPServer" />
     </platform>         
