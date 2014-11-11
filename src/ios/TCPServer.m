@@ -143,24 +143,29 @@
                     idString = [idString substringToIndex:[idString rangeOfString:@"HTTP/" options:NSCaseInsensitiveSearch].location];
                     idString = [idString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
                     
-                    NSLog(@"TCP Server Plugin: Received ID: %@", idString);
-                    
+                    //NSLog(@"TCP Server Plugin: Received ID: %@", idString);
                     
                     // Write received ID into data to send to specific client
-                    // TODO
-                    
-                    
+                    dataToSendToSpecificClient = [dataToSendToSpecificClient stringByReplacingOccurrencesOfString:@"TransmissionId=\"0\"" withString:[NSString stringWithFormat:@"TransmissionId=\"%@\"", idString]];
+
                     // Update content length
-                    // TODO
+                    NSString *contentString = [[NSString alloc] initWithString:dataToSendToSpecificClient];
+                    contentString = [contentString substringFromIndex:[contentString rangeOfString:@"\r\n\r\n"].location + 4];
+                    //NSLog(@"TCP Server Plugin: Content string: %@", contentString);
+                    //NSLog(@"TCP Server Plugin: Content length: %i", [contentString length]);
                     
+                    NSString *contentLengthString = [[NSString alloc] initWithString:dataToSendToSpecificClient];
+                    contentLengthString = [contentLengthString substringFromIndex:[contentLengthString rangeOfString:@"Content-Length"].location];
+                    contentLengthString = [contentLengthString substringToIndex:[contentLengthString rangeOfString:@"Content-Language"].location];
                     
+                    dataToSendToSpecificClient = [dataToSendToSpecificClient stringByReplacingOccurrencesOfString:contentLengthString withString:[NSString stringWithFormat:@"Content-Length: %i\r\n", [contentString length]]];
                     //NSLog(@"TCP Server Plugin: Data to send to specific Client: %@", dataToSendToSpecificClient);
                 }
             }
             else
             {
                 // create non-HTML
-                dataToSendToSpecificClient = [dataToSendToSpecificClient substringFromIndex:[dataToSendToSpecificClient rangeOfString:@"\r\n\r\n"].location + 2];
+                dataToSendToSpecificClient = [dataToSendToSpecificClient substringFromIndex:[dataToSendToSpecificClient rangeOfString:@"\r\n\r\n"].location + 4];
             }
 
 	
