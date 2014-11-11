@@ -1,14 +1,6 @@
 #import "TCPServer.h"
 #import "GCDAsyncSocket.h"
 
-// TODO: Wirklich notwendig?
-#define WELCOME_MSG  0
-#define ECHO_MSG     1
-#define WARNING_MSG  2
-
-#define READ_TIMEOUT 15.0
-#define READ_TIMEOUT_EXTENSION 10.0
-
 
 @implementation TCPServer
 // instance variables
@@ -50,29 +42,39 @@
     CDVPluginResult *pluginResult = nil;
     [pluginResult setKeepCallbackAsBool:TRUE];
 
-    // get parameters
     serverCallback = [command.callbackId copy];
-    
+
+    // get port number and data to send
     NSString *parameters = [command.arguments objectAtIndex:0];
     int port = [[parameters valueForKey:@"port"] integerValue];
-
-    // Save data to send
     dataToSend = [parameters valueForKey:@"dataToSend"];
+    
     NSLog(@"TCP Server Plugin: Data to send: %@", dataToSend);
 
-    // Start Server
-    NSError *error = nil;
-    if(![listenSocket acceptOnPort:port error:&error])
+
+    // Server already running?
+    if (isRunning)
     {
-        isRunning = NO;
-        NSLog(@"TCP Server Plugin: Error starting server: %@", error);
-        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[NSString stringWithFormat:@"Server not started"]];
+        NSLog(@"TCP Server Plugin: Server already running on port %hu. Updated data to send.", [listenSocket localPort]);
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[NSString stringWithFormat:@"Server already running on port %hu. Updated data to send.", [listenSocket localPort]]];
     }
     else
     {
-        isRunning = YES;
-        NSLog(@"TCP Server Plugin: Server started on port %hu", [listenSocket localPort]);
-        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[NSString stringWithFormat:@"Server started on port %hu", [listenSocket localPort]]];
+        // Start Server
+        NSError *error = nil;
+        if([listenSocket acceptOnPort:port error:&error])
+        {
+            isRunning = YES;
+            NSLog(@"TCP Server Plugin: Server started on port %hu", [listenSocket localPort]);
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[NSString stringWithFormat:@"Server started on port %hu", [listenSocket localPort]]];
+        }
+        else
+        {
+            isRunning = NO;
+            NSLog(@"TCP Server Plugin: Could not start Server: %@", error);
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[NSString stringWithFormat:@"Could not start Server"]];
+        }
+
     }
 
     // Return Result
@@ -83,7 +85,7 @@
 - (void)socket:(GCDAsyncSocket *)sock didAcceptNewSocket:(GCDAsyncSocket *)newSocket
 {
 	// This method is executed on the socketQueue (not the main thread)
-	
+    
 	@synchronized(connectedSockets)
 	{
 		[connectedSockets addObject:newSocket];
@@ -94,47 +96,79 @@
 	
 	dispatch_async(dispatch_get_main_queue(), ^{
 		@autoreleasepool {
-		
+        
 			NSLog(@"Accepted client %@:%hu", host, port);
-		
+            
 		}
 	});
     
-    // TODO
-//    NSString *welcomeMsg = dataToSend;
-//	NSData *welcomeData = [welcomeMsg dataUsingEncoding:NSUTF8StringEncoding];
-//	
-//	[newSocket writeData:welcomeData withTimeout:-1 tag:WELCOME_MSG];
-	
-	[newSocket readDataToData:[GCDAsyncSocket CRLFData] withTimeout:READ_TIMEOUT tag:0];
+    // Ready to read data
+	[newSocket readDataToData:[GCDAsyncSocket CRLFData] withTimeout:-1 tag:0];
 }
 
 
 - (void)socket:(GCDAsyncSocket *)sock didReadData:(NSData *)data withTag:(long)tag
 {
 	// This method is executed on the socketQueue (not the main thread)
+
+    NSString *dataToSendToSpecificClient = [[NSString alloc] initWithString:dataToSend];
 	
-	dispatch_async(dispatch_get_main_queue(), ^{
-		@autoreleasepool {
-		
+//	dispatch_async(dispatch_get_main_queue(), ^{
+//		@autoreleasepool
+//        {
+            
+            // get received data
 			NSData *strData = [data subdataWithRange:NSMakeRange(0, [data length] - 2)];
-			NSString *msg = [[NSString alloc] initWithData:strData encoding:NSUTF8StringEncoding];
-			if (msg)
+			NSString *receivedData = [[NSString alloc] initWithData:strData encoding:NSUTF8StringEncoding];
+            
+			if (receivedData)
 			{
-				NSLog(@"TCP Server Plugin: Receceived data: %@", msg);
+				NSLog(@"TCP Server Plugin: Received data: %@", receivedData);
 			}
 			else
 			{
 				NSLog(@"Error converting received data into UTF-8 String");
 			}
-		
-		}
-	});
+
+            // do we have a correct HTML-Request?
+            if ( [receivedData hasPrefix:@"GET"] && ([receivedData containsString:@"HTTP/"] || [receivedData containsString:@"http/"]) )
+            {
+                // did we received an ID?
+                if ([receivedData containsString:@"id="])
+                {
+                    // Read out received ID
+                    NSString *idString = [[NSString alloc] initWithString:receivedData];
+                    
+                    idString = [idString substringFromIndex:[idString rangeOfString:@"id="].location + 3];
+                    idString = [idString substringToIndex:[idString rangeOfString:@"HTTP/" options:NSCaseInsensitiveSearch].location];
+                    idString = [idString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+                    
+                    NSLog(@"TCP Server Plugin: Received ID: %@", idString);
+                    
+                    
+                    // Write received ID into data to send to specific client
+                    // TODO
+                    
+                    
+                    // Update content length
+                    // TODO
+                    
+                    
+                    //NSLog(@"TCP Server Plugin: Data to send to specific Client: %@", dataToSendToSpecificClient);
+                }
+            }
+            else
+            {
+                // create non-HTML
+                dataToSendToSpecificClient = [dataToSendToSpecificClient substringFromIndex:[dataToSendToSpecificClient rangeOfString:@"\r\n\r\n"].location + 2];
+            }
+
 	
-	// Echo message back to client
-    // TODO
-    NSData *dataToSend2 = [dataToSend dataUsingEncoding:NSUTF8StringEncoding];
-	[sock writeData:dataToSend2 withTimeout:-1 tag:ECHO_MSG];
+//		}
+//	});
+    
+    // Send data to client
+    [sock writeData:[dataToSendToSpecificClient dataUsingEncoding:NSUTF8StringEncoding] withTimeout:-1 tag:0];
 }
 
 @end
