@@ -180,7 +180,7 @@ public class TCPServer extends CordovaPlugin {
                 			  idString = idString.substring(0, i);
                 			  idString = idString.trim();
                 			  Log.d(TAG, "ID found: " + idString);
-                			  sendString = sendString.replace("TransmissionId=\"0\"", "TransmisionId=\"" + idString + "\"");
+                			  sendString = sendString.replace("TransmissionId=\"0\"", "TransmissionId=\"" + idString + "\"");
                 			  i = sendString.indexOf("Content-Length");
                 			  String lengthString = sendString.substring(i);
                 			  lengthString = lengthString.substring(0, lengthString.indexOf("Content-Language"));
